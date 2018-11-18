@@ -2,17 +2,18 @@ import Queue
 import time
 import re
 import xxhash
+import base64
 
 class Config:
 	def __init__(self):
 		self.mod = ""
 		self.config = ""
 		self.data = ""
-		self.usr = ""
-		self.pwd = ""
 		self.repo = ""
-		self.branch = ""
+		self.usr = ""
+		self.token = ""
 		self.pk = ""
+		self.sleep = 1800
 		self.fn_s = ""
 		self.id_s = ""
 		self.modules = []
@@ -55,11 +56,11 @@ class Config:
 		self.usr = new
 		return
 
-	def my_pwd(self):
-		return xxhash.xxh64(fixstr(self.pwd)).hexdigest()
+	def my_token(self):
+		return fixstr(self.token)
 
-	def new_pwd(self, new):
-		self.pwd = new
+	def new_token(self, new):
+		self.token = new
 		return
 
 	def my_repo(self):
@@ -69,18 +70,18 @@ class Config:
 		self.repo = new
 		return
 
-	def my_branch(self):
-		return fixstr(self.branch)
-
-	def new_branch(self, new):
-		self.branch = new
-		return
-
 	def my_pk(self):
 		return base64.b64decode(self.pk)
 
 	def new_pk(self, new):
 		self.pk = new
+		return
+
+	def my_sleep(self):
+		return self.sleep
+
+	def new_sleep(self, new):
+		self.sleep = new
 		return
 
 	def new_fn(self):
