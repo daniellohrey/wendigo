@@ -9,8 +9,8 @@ if len(sys.argv) < 2:
 	print "usage: %prog <file1 to encrypt> [file2 to encrypt] [...]"
 	sys.exit(0)
 
-temp = "TEMP FILE NAME"
-pwd = "PASSWORD"
+temp = "fn_mod"
+pwd = "password"
 i = 1
 while i < len(sys.argv):
 	#copy file to temp file with name we expect to extract from
@@ -26,4 +26,9 @@ while i < len(sys.argv):
 		print "dont use filenames with more than 1 ."
 	ofn = fn[0]
 
-	os.system("zip -P %s %s %s" % pwd, ofn, temp)
+	string = "zip -P " + pwd + " " + ofn + " " + temp
+	os.system(string)
+	string = "mv " + ofn + ".zip " + ofn
+	os.system(string)
+
+	i += 1
