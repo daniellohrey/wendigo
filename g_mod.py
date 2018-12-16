@@ -1,39 +1,42 @@
 #takes module files and zip/encrypts them
-#module files are <filename>.py, output files are <filename>
-#needs to be in same directory as conf.ig
 
-import sys
 import os
 import json
+import argparse
 
-if len(sys.argv) < 2:
-	print "usage: %prog <file1 to encrypt> [file2 to encrypt] [...]"
-	sys.exit(0)
+parser = argparse.ArgumentParser(description = 
+	"Encrypts and zips module/config files")
+parser.add_argument("-c", "--config", default = "conf.ig", 
+	help = "Name of config file")
+parser.add_argument("files", nargs = "+", help = "Files to encrypt/zip")
+args = parser.parse_args()
 
-with open("conf.ig", "r") as c:
+with open(args.config, "r") as c:
 	cf = c.read()
 	conf = json.loads(cf)
 	temp = conf["fn_s"]
 	pwd = conf["pwd"]
 
-i = 1
-while i < len(sys.argv):
-	#copy file to temp file with name we expect to extract from
-	f = open(temp, "w")
-	g = open(sys.argv[i], "r")
-	f.write(g.read())
-	g.close()
-	f.close()
+for fn in files:
+	try:
+		#copy file to temp file with name we expect to extract from
+		f = open(temp, "w")
+		g = open(fn, "r")
+		f.write(g.read())
+	except:
+		continue
+	finally:
+		g.close()
+		f.close()
 
 	#build string to use in system zip command
-	fn = sys.argv[i].split(".")
+	nfn = fn.split(".")
 	if len(fn) > 2:
 		print "dont use filenames with more than 1 \'.\'"
-	ofn = fn[0]
+		continue
+	ofn = nfn[0]
 
-	string = "zip -P " + pwd + " " + ofn + " " + temp
-	os.system(string)
-	string = "mv " + ofn + ".zip " + ofn
-	os.system(string)
-
-	i += 1
+	s = "zip -P " + pwd + " " + ofn + " " + temp
+	os.system(s)
+	s = "mv " + ofn + ".zip " + ofn
+	os.system(s)

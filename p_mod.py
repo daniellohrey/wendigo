@@ -11,6 +11,8 @@ group = parser.add_mutually_exclusive_group()
 group.add_argument("-c", "--config", action = "store_true", help = "Use config path"))
 group.add_argument("-m", "--module", action = "store_true", help = "Use module path")
 group.add_argument("-p", "--path", help = "Specify custom upload path")
+parser.add_argument("-o", "--options", default = "conf.ig", help = 
+	"Name of options file")
 parser.add_argument("files", nargs = "+", help = "Files to push to GitHub path"
 args = parser.parse_args()
 
@@ -18,7 +20,7 @@ if not (args.module or args.config or args.path):
 	print "Need to specify module or config path"
 	sys.exit()
 
-with open("conf.ig", "r") as c:
+with open(args.options, "r") as c:
 	cf = c.read()
 	conf = json.loads(cf)
 	usr = conf["usr"]
