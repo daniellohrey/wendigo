@@ -6,5 +6,11 @@ if len(sys.argv) != 2:
 
 with open(sys.argv[1], "w") as f:
 	for i in range(0, 178):
-		s = "$" + str(i) + ":\n"
+		if i < 10:
+			z = "00"
+		elif i < 100:
+			z = "0"
+		else:
+			z = ""
+		s = "$" + z + str(i) + ":\n"
 		f.write(s)
