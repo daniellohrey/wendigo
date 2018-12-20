@@ -222,8 +222,12 @@ def get_file(path):
 
 #creates an empty config file (with random data) to register
 def create_config():
+	#uncaught exception if we cant connect (ie no internet) to loop create
 	repo = connect()
-	repo.create_file(config.g_config(), config.g_com(), config.g_com())
+	try: #catch exception if creating file fails because it already exists
+		repo.create_file(config.g_config(), config.g_com(), config.g_com())
+	except:
+		pass
 	return
 
 #gets config file, imports unimported modules and returns a dictionary of tasks
