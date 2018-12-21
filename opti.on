@@ -176,3 +176,5 @@ $174:SIZE
 $175:random
 $176:g_sleep
 $177:self
+$178:os
+$179:pid
