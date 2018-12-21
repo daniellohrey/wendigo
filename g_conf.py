@@ -4,6 +4,7 @@ import random
 import argparse
 import base64
 import os
+import getpass
 from github3 import authorize
 
 parser = argparse.ArgumentParser(description = "Generates wendigo config files")
@@ -53,7 +54,7 @@ for key in keys:
 if "token" not in options:
 	if args.token:
 		try:
-			p = raw_input("GitHub password: ")
+			p = getpass.getpass("GitHub password: ")
 			auth = authorize(options["usr"], p, scopes = ["public_repo"])
 			options["token"] = base64.b64encode(auth.token)
 		except:

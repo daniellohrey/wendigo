@@ -80,12 +80,14 @@ if args.config:
 	with open(args.config, "r") as f:
 		conf = f.read()
 		strings = json.loads(conf)
+		for key in strings:
+			used.append(strings[key])
 
 with open(args.blank, "r") as f:
 	with open(args.out, "w") as g:
 		for line in f:
-			line = re.sub("\$[0-9][0-9][0-9]", replace, line)
 			if args.config:
 				for key in strings:
 					line = re.sub(key.upper(), str_replace, line)
+			line = re.sub("\$[0-9][0-9][0-9]", replace, line)
 			g.write(line)
