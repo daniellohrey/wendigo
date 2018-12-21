@@ -1,8 +1,8 @@
 import argparse
-import time
 import re
 import xxhash
 import random
+import json
 
 def gk_hash(key):
 	global cur
@@ -31,6 +31,7 @@ parser.add_argument("-s", "--seed", help =
 	"Specify a seed for random number generation (default is current time)")
 parser.add_argument("-g", "--generation", default = gk_hash, help = 
 	"Strategy for variable generation")
+parser.add_argument("-c", "--config", help = "Config file strings are filled from")
 args = parser.parse_args()
 
 gen = args.generation
@@ -42,6 +43,25 @@ def replace(match):
 	if key not in vars:
 		gen(key)
 	return vars[key]
+
+def str_replace(match):
+	global strings
+	key = match.group().lower()
+	return obfstr(strings[key])
+
+def obfstr(f_str):
+	global cur
+	rand = str(random.random()) + cur
+	rand = str(xxhash.xxh64(rand).hexdigest())
+	cur = str(xxhash.xxh64(rand).hexdigest())
+	i = 0
+	o_str = ""
+	for c in f_str:
+		o_str += rand[i % len(rand)]
+		o_str += c
+		i += 1
+	o_str += rand[i % len(rand)]
+	return o_str
 
 vars = {}
 used = []
@@ -56,8 +76,16 @@ if args.variables:
 			vars[key] = value
 			used.append(value)
 
+if args.config:
+	with open(args.config, "r") as f:
+		conf = f.read()
+		strings = json.loads(conf)
+
 with open(args.blank, "r") as f:
 	with open(args.out, "w") as g:
 		for line in f:
 			line = re.sub("\$[0-9][0-9][0-9]", replace, line)
+			if args.config:
+				for key in strings:
+					line = re.sub(key.upper(), str_replace, line)
 			g.write(line)
