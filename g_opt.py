@@ -1,8 +1,11 @@
 import sys
 
 if len(sys.argv) != 2:
-	print "Need out file"
+	print "usage: %prog OUTFILE"
 	sys.exit()
+
+if sys.argv[1] == "-h" or sys.argv[1] == "--help":
+	print "usage: %prog OUTFILE"
 
 with open(sys.argv[1], "w") as f:
 	for i in range(0, 178):
