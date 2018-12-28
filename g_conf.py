@@ -48,14 +48,15 @@ if args.config:
 for key in keys:
 	if key not in options:
 		options[key] = gk_hash()
-		if key == "mod" or key == "config" or key == data:
+		if key == "mod" or key == "config" or key == "data":
 			options[key] += "/"
 
 if "token" not in options:
 	if args.token:
 		try:
 			p = getpass.getpass("GitHub password: ")
-			auth = authorize(options["usr"], p, scopes = ["public_repo"])
+			auth = authorize(options["usr"], p, scopes = 
+				["public_repo"], note = options["repo"])
 			options["token"] = base64.b64encode(auth.token)
 		except:
 			options["token"] = "INSERT TOKEN (base64 encoded)"
