@@ -56,7 +56,8 @@ if "token" not in options:
 		try:
 			p = getpass.getpass("GitHub password: ")
 			auth = authorize(options["usr"], p, scopes = 
-				["public_repo"], note = options["repo"])
+				["public_repo"], note = 
+				xxhash.xxh32(str(random.random())).hexdigest())
 			options["token"] = base64.b64encode(auth.token)
 		except:
 			options["token"] = "INSERT TOKEN (base64 encoded)"

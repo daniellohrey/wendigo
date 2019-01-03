@@ -32,6 +32,10 @@ parser.add_argument("-s", "--seed", help =
 parser.add_argument("-g", "--generation", default = gk_hash, help = 
 	"Strategy for variable generation")
 parser.add_argument("-c", "--config", help = "Config file strings are filled from")
+parser.add_argument("-d", "--defaults", default = "opti.on", help = 
+	"Default name file with key names matching original wendigo file to be copied for reference files")
+parser.add_argument("-r", "--reference", default = "ref.o", help = 
+	"Out reference file to be used to modify module files")
 args = parser.parse_args()
 
 gen = args.generation
@@ -90,4 +94,17 @@ with open(args.blank, "r") as f:
 				for key in strings:
 					line = re.sub(key.upper(), str_replace, line)
 			line = re.sub("\$[0-9][0-9][0-9]", replace, line)
+			g.write(line)
+
+with open(args.defaults, "r") as f:
+	with open(args.reference, "w") as g:
+		i = 0
+		for line in f:
+			if i < 10:
+				s = "$00" + str(i)
+			elif i < 100:
+				s = "$0" + str(i)
+			else:
+				s = "$" + str(i)
+			line = line + ":" + vars[s]
 			g.write(line)
