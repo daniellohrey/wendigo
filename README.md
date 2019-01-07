@@ -15,6 +15,10 @@ Files include:
   - b_out.py: sample generated wendigo file
   - opti.on: sample variable name options file, filled with correct file names
   - README.md: this readme file
+  - g_tk.py: script for generating GitHub tokens
+  - d_tk.py: script for deleting GitHub tokens
+  - modules: module files
+     - pload.py: module that dynamically loads packages from GitHub repositories
 
 Usage:
   - Create a GitHub repo and fill a config file with the required data
