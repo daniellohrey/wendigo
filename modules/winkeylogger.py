@@ -10,6 +10,8 @@ import pyHook #library for windows input hooks
 import win32clipboard
 import StringIO #look into cStringIO
 import time
+import zlib
+import base64
 from github3 import login
 
 #ctypes was only used to get wondow name which we dont need
