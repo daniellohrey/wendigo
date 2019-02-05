@@ -14,7 +14,7 @@ def linuxmine():
 	while not dirlist:
 		cdir = dirlist.pop()
 		for item in os.listdir(cdir):
-			pth = cdir + "/" + item
+			pth = os.path.join(cdir, item)
 			if os.path.isdir(pth):
 				dirlist.push(pth)
 			else:
@@ -28,12 +28,12 @@ def linuxmine():
 def win32mine():
 	data = "win32\n\n"
 	usr = getpass.getuser()
-	cdir = "\\Documents" #find actual root directory for files
+	cdir = "\\" + usr + "\\Documents" #find actual root directory for files
 	dirlist = [cdir]
 	while not dirlist:
 		cdir = dirlist.pop()
 		for item in os.listdir(cdir):
-			pth = cdir + "\\" + item
+			pth = os.path.join(cdir, item)
 			if os.path.isdir(pth):
 				dirlist.push(pth)
 			else:
