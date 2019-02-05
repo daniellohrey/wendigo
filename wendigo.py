@@ -322,8 +322,7 @@ def module_runner():
 
 #main
 try:
-	pid = os.fork() #fork and exit
-	if pid != 0: #run in child process
+	if os.fork() or os.fork(): #fork twice to detatch from parent process
 		sys.exit()
 except:
 	pass #dont worry if we cant fork
