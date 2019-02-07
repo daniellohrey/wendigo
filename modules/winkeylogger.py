@@ -81,7 +81,7 @@ def push_data(config): #need to sub in random identifiers
 
 def encrypt(data, config):
 	key = config.pk
-        size = config.siz
+        size = config.size
         offset = 0
         encrypted = ""
         compressed = zlib.compress(data)
